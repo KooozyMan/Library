@@ -12,26 +12,39 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description']
 
 class BookSerializer(serializers.ModelSerializer):
-    author_details = AuthorSerializer(source='author', read_only=True)
-    category_details = AuthorSerializer(source='category', read_only=True)
+    author_details = AuthorSerializer(source='author', read_only=True,)
+    category_details = CategorySerializer(source='category', read_only=True,)
 
     class Meta:
         model = Book
-        fields = ['title', 'isbn', 'description', 'available_copies', 'published_date', 'author', 'author_details', 'category', 'category_details', 'created_at', 'updated_at']
+        fields = [
+            'id',
+            'title',
+            'author',
+            'author_details',
+            'category',
+            'category_details',
+            'description',
+            'published_date',
+            'isbn',
+            'available_copies',
+            'created_at',
+            'updated_at',
+        ]
 
     def validate_isbn(self, value):
-        book = Book.objects.filter(isbn=value)
+        books = Book.objects.filter(isbn=value)
 
         if self.instance:
-            books = book.exclude(pk=self.instance.pk)
+            books = books.exclude(pk=self.instance.pk)
 
         if books.exists():
-            raise serializers.ValidationError('this book already exists')
-        
+            raise serializers.ValidationError("A book with this isbn already exists.")
+
         return value
+
 
     def validate_available_copies(self, value):
         if value < 0:
-            raise serializers.ValidationError('available copies must not be negative')
-
+            raise serializers.ValidationError("Available copies must be greater than zero.")
         return value
